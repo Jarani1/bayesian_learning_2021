@@ -2,6 +2,8 @@ library("ggplot2")
 library("mvtnorm")
 library("LaplacesDemon")
 library("reshape2")
+library("bayestestR")
+
 
 tempdata = read.table("TempLinkoping.txt", col.names = c("time","temp"), header = TRUE)
 tempdata = lapply(tempdata, as.double) #data type was string which made everything shit the bed
@@ -82,9 +84,69 @@ ggplot(mtest, aes(x=day, y=value,group=models,
 
 
 # looks good
+y = tempdata$temp
+b_hat = solve(t(X)%*%X) %*% t(X)%*%y
+u_n = solve(t(X)%*%X + omega0) %*% (t(X)%*%(X)%*%b_hat + omega0%*%t(u0))
+omega_n = t(X)%*%X + omega0
+v_n = v0 + n
+vnsigma_n = v0%*%sigma0 + (t(y)%*%y + u0%*%omega0%*%t(u0) - t(u_n)%*%omega_n%*%u_n)
+sigma_n = vnsigma_n/v_n
 
 
+#draw posts
+drawposts <- function(draws){
+  sigmas_p = rinvchisq(draws, v_n, sigma_n)
+  betas_p = matrix(0, draws, 3)
+  i = 0
+  for(sigma in sigmas_p){
+    betas_p[i,] = rmvnorm(1, u_n, sigma * solve(omega_n)) #sovle to avoid inf values of inverse
+    i = i + 1
+  }
+  df = data.frame(
+    sigmas_p = sigmas_p,
+    betas_p = betas_p
+  )
+  return(df)
+}
+post_draws = drawposts(100)
+
+# histogram of each marginal
+hist(post_draws$sigmas_p)
+hist(post_draws$betas_p.1)
+hist(post_draws$betas_p.2)
+hist(post_draws$betas_p.3)
+
+# scatterplot
+# for each point in time take median and get low/high
+med = integer(365)
+high = integer(365)
+low = integer(365)
+i = 0
+for(time in tempdata$time){
+  pred = post_draws$betas_p.1 + post_draws$betas_p.2 %*% t(time) + post_draws$betas_p.3 %*% t(time^2) 
+  interval = ci(pred, method = "ETI", ci = 0.95)
+  low[i] = interval$CI_low
+  high[i] = interval$CI_high
+  med[i] = median(pred)
+  i = i + 1
+}  
+
+# data frame and plot 
+
+postdf = data.frame(
+  days = 1:365,
+  median = med,
+  low = low,
+  high = high,
+  temps = tempdata$temp
+)
+
+ggplot(postdf, aes(days, temps)) + 
+  geom_point() +
+  geom_line(data = postdf, aes(days, median), col = "red", size = 1) +
+  geom_line(data = postdf, aes(days, low), col = "blue", size = 1) +
+  geom_line(data = postdf, aes(days, high), col = "blue", size = 1)
 
 
-
-
+# 1 c) highest expected time
+# get max day for each model, plot? 
