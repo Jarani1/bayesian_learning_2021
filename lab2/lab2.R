@@ -121,9 +121,12 @@ hist(post_draws$betas_p.3)
 med = integer(365)
 high = integer(365)
 low = integer(365)
+
+preds = matrix(0,365,100)
 i = 0
 for(time in tempdata$time){
-  pred = post_draws$betas_p.1 + post_draws$betas_p.2 %*% t(time) + post_draws$betas_p.3 %*% t(time^2) 
+  pred = post_draws$betas_p.1 + post_draws$betas_p.2 %*% t(time) + post_draws$betas_p.3 %*% t(time^2)
+  preds[i,] = c(pred)
   interval = ci(pred, method = "ETI", ci = 0.95)
   low[i] = interval$CI_low
   high[i] = interval$CI_high
@@ -132,7 +135,6 @@ for(time in tempdata$time){
 }  
 
 # data frame and plot 
-
 postdf = data.frame(
   days = 1:365,
   median = med,
@@ -150,3 +152,13 @@ ggplot(postdf, aes(days, temps)) +
 
 # 1 c) highest expected time
 # get max day for each model, plot? 
+
+days = apply(preds, 2, which.max) # warmest predicted day of each model
+days = head(days, -1) #we have zeros at the last model for some reason, common bug through code
+
+plot(density(days)) #dist, 196.5 warmest day 
+
+
+# 1 d)
+
+
