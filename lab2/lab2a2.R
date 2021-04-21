@@ -82,5 +82,43 @@ ggplot(approxdf, aes(postdraws)) +
 #that's A done 
 ###################################################################
 
+# so annoying that they just don't give us a vector
+# have to play detecto-magnifying-glass to translate the shitty text to input data
+
+woman = matrix(c(1, 10, 8, 10, 1, 40, 1, 1))
+
+# for each post_beta calculte probability of employment, plot dist 
+woman_dist = exp(post_betas %*% woman) / (1 + exp(post_betas %*% woman))
 
 
+womandf <- data.frame(
+  dist = woman_dist
+)
+ggplot(womandf, aes(x = dist)) +
+  ggtitle("posterior predictive distribution") +
+  labs(x = "probability", y = "density") +
+  geom_density(size = 1) +
+  geom_vline(aes(xintercept = 0.5), size = 1,
+             linetype = "dashed", col = "blue")
+
+# in terms of getting employed it doesn't look to good 
+
+###################################################################
+#that's B done 
+###################################################################
+
+# This is like flipping a coin where p = 0.5 but life isn't a fair coin so p will be the mean of the dist
+p = mean(woman_dist)
+
+bdist = c(0,1,2,3,4,5,6,7,8) # prob that 0 works 1 works, 2 works, ..., 8 works.
+binomial = dbinom(bdist,8, p)
+
+bdf = data.frame(
+  x = 1:9,
+  y = binomial
+)
+ggplot(bdf, aes(x,y)) + geom_point() + labs(x = "Women", y = "probability of employement")
+
+###################################################################
+#that's C done 
+###################################################################
