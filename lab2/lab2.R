@@ -157,8 +157,17 @@ days = apply(preds, 2, which.max) # warmest predicted day of each model
 days = head(days, -1) #we have zeros at the last model for some reason, common bug through code
 
 plot(density(days)) #dist, 196.5 warmest day 
+maxday = density(days)
 
-
+daysdf = data.frame(
+  x = maxday$x,
+  y = maxday$y
+  
+)
+ggplot(daysdf, aes(x,y)) +
+  geom_area(fill="turquoise") + geom_vline(xintercept = mean(days), color = "red", size = 0.7)
 # 1 d)
 
+# smoothness prior for splines. u_0 = 0 omega0 = alfa * identity where alfa would be around 2-3 I suspect would be enough for this problem
+# slides talk some about this not sure 
 
