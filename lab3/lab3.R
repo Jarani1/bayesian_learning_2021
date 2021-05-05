@@ -1,6 +1,6 @@
 library("ggplot2")
 library("LaplacesDemon")
-
+library("reshape2")
 
 data = read.table("rainfall.dat")
 
@@ -56,13 +56,13 @@ gibbsdf <- data.frame(
   iteration = 1:nDraws
 )
 stepsdf <- data.frame(
-  my = gibbsDraws[,1][1:100],
-  sigma2 = gibbsDraws[,2][1:100]
+  my = gibbsDraws[,1],
+  sigma2 = gibbsDraws[,2]
 )
 
 
 
-plot(gibbsDraws[,1][1:100], gibbsDraws[,2][1:100], type="s")
+plot(gibbsDraws[,1], gibbsDraws[,2], type="s")
 
 ggplot(gibbsdf, aes(iteration, my)) +
   labs(x = "MCMC iteration") +
@@ -74,4 +74,28 @@ ggplot(gibbsdf, aes(iteration, sigma2)) +
 
 ggplot(stepsdf, aes(my, sigma2)) +
   geom_step(direction = "vh")
+
+
+# 1b)
+# histogram
+
+#post pred using gibbs
+
+
+postmy = gibbsDraws[nDraws,][1]
+postsig = gibbsDraws[nDraws,][2]
+
+gibbspost = rnorm(y, postmy, sqrt(postsig))
+
+x = data.frame(
+  gibbs = gibbspost,
+  rain = data$V1
+)
+
+plotdata = melt(x)
+ggplot(plotdata,aes(x=value, fill=variable)) + geom_density(alpha=0.25)
+
+## part 1 done
+
+
 
