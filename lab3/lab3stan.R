@@ -21,7 +21,7 @@ arfunc <- function(u,fi,runs){
 fis = seq(-1,1,0.01)
 
 arfunc(u,-1,t)
-resultMatrix = matrix(0,length(fi), t)
+resultMatrix = matrix(0,length(fis), t)
 
 row = 1
 for( fi in fis){
@@ -39,6 +39,54 @@ hist(resultMatrix[,200])
 # looks like we're getting a tighter and thighter normal dist centered around 20
 
 
+xt = arfunc(u, 0.3, t)
+yt = arfunc(u, 0.9, t)
+
+StanModel = '
+data {
+  int<lower=0> T;
+  vector[T] x;
+}
+parameters {
+  real u;
+  real fi;
+  real<lower=0> sigma;
+}
+model {
+  for (t in 2:T)
+    x[t] ~ normal(u + fi * (x[t-1] - u), sigma);
+}'
+
+xdata = list(T = t, x = xt)
+ydata = list(T = t, x = yt)
+
+xproc = stan(model_code = StanModel, data = xdata)
+yproc = stan(model_code = StanModel, data = ydata)
+
+valuesx = summary(xproc, pars = c("u","fi","sigma"),
+                  probs = c(0.025, 0.975))$summary
+valuesy = summary(yproc, pars = c("u","fi","sigma"),
+                  probs = c(0.025, 0.975))$summary
+
+# did stan predict the variables well? 
+
+mean(xt) # from original model
+mean(yt) # from original model
+
+## 
+#we see that the stan is very close for all three, means for both data sets and fi/sigma
+
+valuesx
+#captures all
+valuesy
+#captures all 
+##joint post
+
+## need to figure out how to get convergence then lab is done.
+listofdrawsx = extract(xproc)
+listofdrawsy = extract(yproc)
+plot(listofdrawsx$fi, listofdrawsx$u)
+plot(listofdrawsy$fi, listofdrawsy$u)
 
   
 
