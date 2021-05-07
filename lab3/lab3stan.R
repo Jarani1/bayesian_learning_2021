@@ -85,8 +85,33 @@ valuesy
 ## need to figure out how to get convergence then lab is done.
 listofdrawsx = extract(xproc)
 listofdrawsy = extract(yproc)
-plot(listofdrawsx$fi, listofdrawsx$u)
-plot(listofdrawsy$fi, listofdrawsy$u)
 
-  
+plot(listofdrawsx$u)
+plot(listofdrawsx$fi)
+plot(listofdrawsx$sigma)
+
+1:length(listofdrawsx$u)
+
+
+udf = data.frame(
+  draws = 1:length(listofdrawsx$u),
+  my = listofdrawsx$u
+)
+
+
+fidf = data.frame(
+  draws = 1:length(listofdrawsx$u),
+  fi = listofdrawsx$fi
+)
+
+sigmadf = data.frame(
+  draws = 1:length(listofdrawsx$u),
+  sigma = listofdrawsx$sigma
+)
+
+ggplot(udf, aes(x = draws, y = my)) + geom_line()
+ggplot(fidf, aes(x = draws, y = fi)) + geom_line()
+ggplot(sigmadf, aes(x = draws, y = sigma)) + geom_line()
+
+# lab done
 
